@@ -1,0 +1,22 @@
+{
+  "name": "leaflet.arrawpath",
+  "version": "1.0.0",
+  "description": "A plugin to draw arraws along path",
+  "main": "Leaflet.ArrawPath.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HugeMountain/leaflet-arraw-path.git"
+  },
+  "peerDependencies": {
+    "leaflet": "^1.0.0"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HugeMountain/leaflet-arraw-path/issues"
+  },
+  "homepage": "https://github.com/HugeMountain/leaflet-arraw-path#readme"
+}
