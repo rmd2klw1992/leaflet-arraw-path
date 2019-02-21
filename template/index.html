@@ -1,0 +1,101 @@
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=gbk">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.0/leaflet.css"/>
+    <!--<script src="../leaflet/src/Leaflet.js"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.0/leaflet.js"></script>
+
+    <link rel="stylesheet" href="../Leaflet.ArrawPath.css"/>
+    <script src="../Leaflet.ArrowPath.js" charset="UTF-8"></script>
+
+
+    <style>
+        #map {
+            height: 500px;
+            width: 700px;
+        }
+    </style>
+
+</head>
+<body>
+<div id="map"></div>
+<canvas id="mycanvas" width="200" height="200">
+
+</canvas>
+<script>
+    var canvasDir = document.createElement('canvas')
+    var width = 8;
+    canvasDir.width = width;
+    canvasDir.height = width;
+    var context = canvasDir.getContext('2d');
+    context.strokeStyle = '#010e16';
+    context.lineJoin = 'round';
+    context.lineWidth = 1;
+    context.moveTo(-2, -2);
+    context.lineTo(width / 2, 6);
+    context.lineTo(-2, 2);
+    context.stroke();
+
+
+    var canvasImg = new Image();
+    canvasImg.onload= function() {
+        canvasImg.onload = null;
+    }
+
+    canvasImg.src="./aa.png";
+
+
+
+
+
+    var map = L.map('map').setView([47.99, -111.05], 5);
+
+
+    var baseLayer = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+    });
+    baseLayer.addTo(map);
+
+
+    var render = new L.ArrowPath({
+        stepSize: 30,
+        symbolText: null,
+        symbolImg: canvasDir,
+        theta: -60,
+        offset: 0
+    });
+    var lines = [{
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [[-105, 40], [-110, 45], [-115, 55]]
+        }
+    }, {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [[-100, 40], [-105, 45], [-110, 55]]
+        }
+    }];
+    L.geoJSON(lines, {
+        style: (feature) => {
+            return {
+                color: '#86ff08',
+                weight: 4,
+                renderer: render
+            };
+        },
+        onEachFeature: (feature, layer) => {
+
+        },
+    }).addTo(map)
+
+
+
+</script>
+
+</body>
+</html>
