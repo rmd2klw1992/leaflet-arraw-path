@@ -25,16 +25,16 @@
 </canvas>
 <script>
     var canvasDir = document.createElement('canvas')
-    var width = 8;
+    var width = 7;
     canvasDir.width = width;
     canvasDir.height = width;
     var context = canvasDir.getContext('2d');
-    context.strokeStyle = '#010e16';
+    context.strokeStyle = '#ffffff';
     context.lineJoin = 'round';
-    context.lineWidth = 1;
-    context.moveTo(-2, -2);
-    context.lineTo(width / 2, 6);
-    context.lineTo(-2, 2);
+    context.lineWidth = 2;
+    context.moveTo(-1, width - 1);
+    context.lineTo(width / 2, 1);
+    context.lineTo(width + 1, width - 1);
     context.stroke();
 
 
@@ -62,8 +62,9 @@
         stepSize: 30,
         symbolText: null,
         symbolImg: canvasDir,
-        theta: -60,
-        offset: 0
+        theta: -80.1,
+        offset: -4.5,
+        imgClipOffset: 2
     });
     var lines = [{
         "type": "Feature",
@@ -83,8 +84,8 @@
     L.geoJSON(lines, {
         style: (feature) => {
             return {
-                color: '#86ff08',
-                weight: 4,
+                color: '#091dff',
+                weight: 5,
                 renderer: render
             };
         },

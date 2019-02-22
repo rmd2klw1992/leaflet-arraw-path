@@ -25,14 +25,13 @@
             aniOffset: 0.3,
             theta: 0,
             offset: 0,
-            lineWidth: 0
-
+            imgClipOffset: 0
         },
 
         initialize: function (options) {
             options = L.Util.setOptions(this, options);
             L.Util.stamp(this);
-            this._layers = this._layers || {};
+            // this._layers = this._layers || {};
 
         },
 
@@ -66,7 +65,6 @@
         },
 
         _text: function (ctx, layer) {
-            this.options.lineWidth = layer.options.weight;
             let options = this.options;
             ctx.globalAlpha = 1;
             let p;
@@ -96,15 +94,17 @@
             }
         },
 
-        _drawSymbol: function(parts, ctx, options) {
+        _drawSymbol: function (parts, ctx, options) {
             parts.forEach((points) => {
                 for (let i = 0, l = points.length - 1; i < l; i++) {
-                   this._generatePoints(ctx, points[i], points[i + 1], options.stepSize, options.aniOffset, options.symbolImg || options.symbolText, options.theta, options.offset, options.lineWidth)
+                    this._generatePoints(ctx, points[i], points[i + 1],
+                        options.stepSize, options.aniOffset, options.symbolImg || options.symbolText,
+                        options.theta, options.offset, options.imgClipOffset)
                 }
             });
         },
 
-        _generatePoints: function(ctx, startP, endP, stepSize = 30, aniOffset = 0.5, img, theta, offset, lineWidth) {
+        _generatePoints: function (ctx, startP, endP, stepSize = 30, aniOffset = 0.5, img, theta, offset, imgClipOffset) {
             let radA = Math.atan((endP.y - startP.y) / (endP.x - startP.x));
             if ((endP.x - startP.x) < 0) {
                 radA += Math.PI;
@@ -113,64 +113,29 @@
             const stepNum = dist / stepSize;
 
             // gen points by stepSize.. if enable corner arrow, start s with (0~1) float number.
-
-            if (img) {
-                this._drawImg(startP, img, ctx, radA, stepNum, stepSize, aniOffset, theta, offset, lineWidth);
-            } else {
-                this._drawText(startP, img, ctx, radA, stepNum, stepSize, aniOffset, theta, offset, lineWidth);
-            }
-        },
-
-        _drawText: function(startP, img, ctx, radA, stepNum, stepSize, aniOffset, theta, offset, lineWidth) {
             for (let s = aniOffset; s <= stepNum; s++) {
                 const pX = Math.round(startP.x + s * stepSize * Math.cos(radA));
                 const pY = Math.round(startP.y + s * stepSize * Math.sin(radA));
-                ctx.fillText(img, pX + offset, pY + offset);
-            }
-        },
-
-        _drawImg: function(startP, img, ctx, radA, stepNum, stepSize, aniOffset, theta, offset, lineWidth) {
-            for (let s = aniOffset; s <= stepNum; s++) {
-                const pX = Math.round(startP.x + s * stepSize * Math.cos(radA));
-                const pY = Math.round(startP.y + s * stepSize * Math.sin(radA));
-                ctx.save();
-                ctx.translate(pX + offset, pY + offset);  // consider img position and imgWidth/Height.
-                ctx.rotate(radA + theta);
-                ctx.drawImage(img, -lineWidth / 2, -lineWidth);
-                ctx.restore();
-            }
-        },
-
-        _handleMouseHover: function (e, point) {
-            let id, layer;
-
-            for (id in this._drawnLayers) {
-                layer = this._drawnLayers[id];
-                if (layer.options.interactive
-                    && layer._containsPoint(point)) {
-                    L.DomUtil.addClass(this._containerText,
-                        'leaflet-interactive'); // change cursor
-                    this._fireEvent([layer], e, 'mouseover');
-                    this._hoveredLayer = layer;
+                if (img) {
+                    this._drawImg(pX, pY, img, ctx, radA, theta, offset, imgClipOffset);
+                } else {
+                    this._drawText(pX, pY, img, ctx, radA, theta, offset);
                 }
             }
-
-            if (this._hoveredLayer) {
-                this._fireEvent([this._hoveredLayer], e);
-            }
         },
 
-        _handleMouseOut: function (e, point) {
-            let layer = this._hoveredLayer;
-            if (layer
-                && (e.type === 'mouseout' || !layer
-                    ._containsPoint(point))) {
-                // if we're leaving the layer, fire mouseout
-                L.DomUtil.removeClass(this._containerText,
-                    'leaflet-interactive');
-                this._fireEvent([layer], e, 'mouseout');
-                this._hoveredLayer = null;
-            }
+        _drawText: function (pX, pY, img, ctx, radA, theta, offset) {
+            ctx.fillText(img, pX + offset, pY + offset);
+        },
+
+        _drawImg: function (pX, pY, img, ctx, radA, theta, offset, imgClipOffset) {
+            let width = img.width;
+            let height = img.height;
+            ctx.save();
+            ctx.translate(pX + offset, pY);  // consider img position and imgWidth/Height.
+            ctx.rotate(radA + theta);
+            ctx.drawImage(img, 0, 0, width, height, imgClipOffset, imgClipOffset, width - imgClipOffset, height - imgClipOffset);
+            ctx.restore();
         },
 
         _updateTransform: function (center, zoom) {
@@ -272,13 +237,6 @@
             return parseInt(this._map.getZoom());
         },
 
-        _getCentroid: function (layer) {
-            if (layer && layer.getCenter && this._map) {
-                let latlngCenter = layer.getCenter();
-                let containerPoint = this._map.latLngToContainerPoint(latlngCenter);
-                return this._map.containerPointToLayerPoint(containerPoint);
-            }
-        }
     });
     // implement your plugin
 
