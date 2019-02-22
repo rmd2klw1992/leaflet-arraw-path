@@ -24,7 +24,8 @@
             textBaseline: "middle",
             aniOffset: 0.3,
             theta: 0,
-            offset: 0,
+            offsetX: 0,
+            offsetY: 0,
             imgClipOffset: 0
         },
 
@@ -99,12 +100,12 @@
                 for (let i = 0, l = points.length - 1; i < l; i++) {
                     this._generatePoints(ctx, points[i], points[i + 1],
                         options.stepSize, options.aniOffset, options.symbolImg || options.symbolText,
-                        options.theta, options.offset, options.imgClipOffset)
+                        options.theta, options.offsetX, options.offsetY, options.imgClipOffset)
                 }
             });
         },
 
-        _generatePoints: function (ctx, startP, endP, stepSize = 30, aniOffset = 0.5, img, theta, offset, imgClipOffset) {
+        _generatePoints: function (ctx, startP, endP, stepSize = 30, aniOffset = 0.5, img, theta, offsetX, offsetY, imgClipOffset) {
             let radA = Math.atan((endP.y - startP.y) / (endP.x - startP.x));
             if ((endP.x - startP.x) < 0) {
                 radA += Math.PI;
@@ -117,22 +118,22 @@
                 const pX = Math.round(startP.x + s * stepSize * Math.cos(radA));
                 const pY = Math.round(startP.y + s * stepSize * Math.sin(radA));
                 if (img) {
-                    this._drawImg(pX, pY, img, ctx, radA, theta, offset, imgClipOffset);
+                    this._drawImg(pX, pY, img, ctx, radA, theta, offsetX, offsetY, imgClipOffset);
                 } else {
-                    this._drawText(pX, pY, img, ctx, radA, theta, offset);
+                    this._drawText(pX, pY, img, ctx, radA, theta, offsetX, offsetY);
                 }
             }
         },
 
-        _drawText: function (pX, pY, img, ctx, radA, theta, offset) {
-            ctx.fillText(img, pX + offset, pY + offset);
+        _drawText: function (pX, pY, img, ctx, radA, theta, offsetX, offsetY) {
+            ctx.fillText(img, pX + offsetX, pY + offsetY);
         },
 
-        _drawImg: function (pX, pY, img, ctx, radA, theta, offset, imgClipOffset) {
+        _drawImg: function (pX, pY, img, ctx, radA, theta, offsetX, offsetY, imgClipOffset) {
             let width = img.width;
             let height = img.height;
             ctx.save();
-            ctx.translate(pX + offset, pY);  // consider img position and imgWidth/Height.
+            ctx.translate(pX + offsetX, pY + offsetY);  // consider img position and imgWidth/Height.
             ctx.rotate(radA + theta);
             ctx.drawImage(img, 0, 0, width, height, imgClipOffset, imgClipOffset, width - imgClipOffset, height - imgClipOffset);
             ctx.restore();
