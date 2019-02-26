@@ -1,6 +1,6 @@
 {
-  "name": "leaflet.arrawpath",
-  "version": "1.0.0",
+  "name": "leaflet.arrowpath",
+  "version": "1.0.1",
   "description": "A plugin to draw arraws along path",
   "main": "Leaflet.ArrawPath.js",
   "scripts": {
