@@ -14,85 +14,55 @@
         window.L.ArrowPath = factory(L);
     }
 }(function (L) {
+
+    // implement your plugin
     let ArrowPath = L.Canvas.extend({
 
         options: {
             stepSize: 10,
             symbolText: null,
             symbolImg: null,
-            textAlign: "center",
-            textBaseline: "middle",
             aniOffset: 0.3,
             theta: 0,
             offsetX: 0,
             offsetY: 0,
-            imgClipOffset: 0
+            imgClipOffset: 0,
+            textStyle: {
+                fontSize: 14,
+                fillStyle: '#ffffff',
+                lineWidth: 8
+            }
         },
 
         initialize: function (options) {
-            options = L.Util.setOptions(this, options);
+            L.Util.setOptions(this, options);
             L.Util.stamp(this);
-            // this._layers = this._layers || {};
-
         },
 
         _initContainer: function (options) {
-
             L.Canvas.prototype._initContainer.call(this);
 
-            this._containerText = document.createElement('canvas');
-
-            L.DomEvent.on(this._containerText, 'mousemove',
-                L.Util.throttle(this._onMouseMove, 32, this), this).on(
-                this._containerText,
-                'click dblclick mousedown mouseup contextmenu',
-                this._onClick, this).on(this._containerText,
-                'mouseout', this._handleMouseOut, this);
-
-            this._ctxLabel = this._containerText.getContext('2d');
+            this._containerSymbol = document.createElement('canvas');
+            this._ctxLabel = this._containerSymbol.getContext('2d');
 
             L.DomUtil
-                .addClass(this._containerText, 'leaflet-zoom-animated');
-            this.getPane().appendChild(this._containerText);
+                .addClass(this._containerSymbol, 'leaflet-zoom-animated');
+            this.getPane().appendChild(this._containerSymbol);
 
-            //Register the add/remove layers event to update the annotations accordingly
-            if (this._map) {
-                let handleLayerChanges = function () {
-                    this._reset();
-                    this._redraw();
-                }.bind(this);
-                this._map.on("layerremove", L.Util.throttle(handleLayerChanges, 32, this));
-            }
         },
 
         _text: function (ctx, layer) {
+            // polygon or polyline
+            if (!layer._parts || layer._parts.length === 0 || layer._parts[0].length === 0) {
+                return;
+            }
             let options = this.options;
             ctx.globalAlpha = 1;
-            let p;
 
-            // polygon or polyline
-            if (layer._parts.length === 0 || layer._parts[0].length === 0) {
-                return;
-            }
-
-            if (layer instanceof L.Polyline && this._map.hasLayer(layer)) {
-                p = this._getCenter(layer._parts[0]);
-            }
-
-            if (!p || (!options.symbolImg && !options.symbolText)) {
-                return;
-            }
-
-            /**
-             * Render text alongside the polyline
-             *
-             **/
-            if (layer._parts) {
-                ctx.textAlign = options.textAlign;
-                ctx.textBaseline = options.textBaseline;
-                this._drawSymbol(layer._parts, ctx, options);
-
-            }
+            //Render symbols alongside the polyline
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            this._drawSymbol(layer._parts, ctx, options);
         },
 
         _drawSymbol: function (parts, ctx, options) {
@@ -100,12 +70,12 @@
                 for (let i = 0, l = points.length - 1; i < l; i++) {
                     this._generatePoints(ctx, points[i], points[i + 1],
                         options.stepSize, options.aniOffset, options.symbolImg || options.symbolText,
-                        options.theta, options.offsetX, options.offsetY, options.imgClipOffset)
+                        options.theta, options.offsetX, options.offsetY, options.imgClipOffset, options.textStyle)
                 }
             });
         },
 
-        _generatePoints: function (ctx, startP, endP, stepSize = 30, aniOffset = 0.5, img, theta, offsetX, offsetY, imgClipOffset) {
+        _generatePoints: function (ctx, startP, endP, stepSize = 30, aniOffset = 0.5, img, theta, offsetX, offsetY, imgClipOffset, textStyle) {
             let radA = Math.atan((endP.y - startP.y) / (endP.x - startP.x));
             if ((endP.x - startP.x) < 0) {
                 radA += Math.PI;
@@ -117,16 +87,25 @@
             for (let s = aniOffset; s <= stepNum; s++) {
                 const pX = Math.round(startP.x + s * stepSize * Math.cos(radA));
                 const pY = Math.round(startP.y + s * stepSize * Math.sin(radA));
-                if (img) {
+                if (typeof img != 'string') {
                     this._drawImg(pX, pY, img, ctx, radA, theta, offsetX, offsetY, imgClipOffset);
                 } else {
-                    this._drawText(pX, pY, img, ctx, radA, theta, offsetX, offsetY);
+                    this._drawText(pX, pY, img, ctx, radA, theta, offsetX, offsetY, textStyle);
                 }
             }
         },
 
-        _drawText: function (pX, pY, img, ctx, radA, theta, offsetX, offsetY) {
-            ctx.fillText(img, pX + offsetX, pY + offsetY);
+        _drawText: function (pX, pY, text, ctx, radA, theta, offsetX, offsetY, textStyle) {
+
+            ctx.save();
+            ctx.font = textStyle.fontSize + "px 'Helvetica Neue',Helvetica,Arial,sans-serif";
+            ctx.fillStyle = textStyle.fillStyle;
+            ctx.lineWidth = textStyle.lineWidth;
+            ctx.translate(pX + offsetX, pY + offsetY);
+            ctx.rotate(radA + theta);
+            ctx.fillText(text, 0, 1);
+
+            ctx.restore();
         },
 
         _drawImg: function (pX, pY, img, ctx, radA, theta, offsetX, offsetY, imgClipOffset) {
@@ -154,20 +133,20 @@
                     viewHalf).subtract(centerOffset);
 
             if (L.Browser.any3d) {
-                L.DomUtil.setTransform(this._containerText, topLeftOffset,
+                L.DomUtil.setTransform(this._containerSymbol, topLeftOffset,
                     scale);
             } else {
-                L.DomUtil.setPosition(this._containerText, topLeftOffset);
+                L.DomUtil.setPosition(this._containerSymbol, topLeftOffset);
             }
         },
 
         _update: function () {
-            // textList
-            this._textList = [];
-
             L.Renderer.prototype._update.call(this);
-            let b = this._bounds, container = this._containerText, size = b
-                .getSize(), m = L.Browser.retina ? 2 : 1;
+
+            let b = this._bounds,
+                container = this._containerSymbol,
+                size = b.getSize(),
+                m = L.Browser.retina ? 2 : 1;
 
             L.DomUtil.setPosition(container, b.min);
 
@@ -197,52 +176,11 @@
             this._text(this._ctxLabel, layer);
         },
 
-        _getCenter: function (points) {
-
-            let i, halfDist, segDist, dist, p1, p2, ratio, len = points.length;
-
-            if (!len) {
-                return null;
-            }
-
-            // polyline centroid algorithm; only uses the first ring if
-            // there are multiple
-
-            for (i = 0, halfDist = 0; i < len - 1; i++) {
-                halfDist += points[i].distanceTo(points[i + 1]) / 2;
-            }
-
-            // The line is so small in the current view that all points are
-            // on the same pixel.
-            if (halfDist === 0) {
-                return points[0];
-            }
-
-            for (i = 0, dist = 0; i < len - 1; i++) {
-                p1 = points[i];
-                p2 = points[i + 1];
-                segDist = p1.distanceTo(p2);
-                dist += segDist;
-
-                if (dist > halfDist) {
-                    ratio = (dist - halfDist) / segDist;
-                    let resutl = [p2.x - ratio * (p2.x - p1.x),
-                        p2.y - ratio * (p2.y - p1.y)];
-
-                    return L.point(resutl[0], resutl[1]);
-                }
-            }
-        },
-
-        _getDynamicFontSize: function () {
-            return parseInt(this._map.getZoom());
-        },
-
     });
-    // implement your plugin
 
     // return your plugin when you are done
     return ArrowPath;
+
 }, window));
 
 

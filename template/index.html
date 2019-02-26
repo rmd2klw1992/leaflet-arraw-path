@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=gbk">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.0/leaflet.css"/>
-    <!--<script src="../leaflet/src/Leaflet.js"></script>-->
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.0/leaflet.js"></script>
 
     <link rel="stylesheet" href="../Leaflet.ArrawPath.css"/>
@@ -12,17 +12,16 @@
 
     <style>
         #map {
-            height: 500px;
-            width: 700px;
+            height: 100%;
+            width: 100%;
         }
     </style>
 
 </head>
 <body>
-<div id="map"></div>
-<canvas id="mycanvas" width="200" height="200">
 
-</canvas>
+<div id="map"></div>
+
 <script>
     var canvasDir = document.createElement('canvas')
     var width = 7;
@@ -37,36 +36,54 @@
     context.lineTo(width + 1, width - 1);
     context.stroke();
 
+    // var render = new L.ArrowPath({
+    //     stepSize: 30,
+    //     symbolText: null,
+    //     symbolImg: canvasDir,
+    //     theta: -80.1,
+    //     offsetX: -4,
+    //     offsetY: 2,
+    //     imgClipOffset: 2
+    // });
+
 
     var canvasImg = new Image();
     canvasImg.onload= function() {
         canvasImg.onload = null;
     }
 
-    canvasImg.src="./aa.png";
-
-
-
+    canvasImg.src="./arrow.png";
+    //
+    // var render = new L.ArrowPath({
+    //     stepSize: 30,
+    //     symbolText: null,
+    //     symbolImg: canvasImg,
+    //     theta: 0,
+    //     offsetX: -9,
+    //     offsetY: 4,
+    //     imgClipOffset: 3
+    // });
+    //
+    var render = new L.ArrowPath({
+        stepSize: 30,
+        symbolText: '>',
+        textStyle: {
+            fontSize: 14,
+            fillStyle: '#ffffff',
+            lineWidth: 8
+        }
+    });
 
 
     var map = L.map('map').setView([47.99, -111.05], 5);
 
 
-    var baseLayer = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
-    });
-    baseLayer.addTo(map);
+    var baseLayer = L.tileLayer.wms('https://demo.boundlessgeo.com/geoserver/ows?', {
+        layers: 'nasa:bluemarble'
+    }).addTo(map);
 
 
-    var render = new L.ArrowPath({
-        stepSize: 30,
-        symbolText: null,
-        symbolImg: canvasDir,
-        theta: -80.1,
-        offsetX: -4,
-        offsetY: 2,
-        imgClipOffset: 2
-    });
+
     var lines = [{
         "type": "Feature",
         "properties": {},
@@ -85,13 +102,13 @@
     L.geoJSON(lines, {
         style: (feature) => {
             return {
-                color: '#091dff',
+                color: '#ff0c68',
                 weight: 5,
                 renderer: render
             };
         },
         onEachFeature: (feature, layer) => {
-
+            layer.bindPopup(`aa`, {});
         },
     }).addTo(map)
 
