@@ -4,7 +4,7 @@ A plugin to draw arrows along path
 
 ## Demo
 
-https://hugemountain.github.io/leaflet-arraw-path/
+https://hugemountain.github.io/leaflet-arraw-path/template/index.html
 
 ## npm
 
